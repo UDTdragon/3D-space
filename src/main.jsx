@@ -12,7 +12,28 @@ function App(){const host=useRef(),viewer=useRef();const [entered,setEntered]=us
  return <main className={entered?'exhibition entered':'exhibition'}>
   <div className="room" data-station={station} ref={host} role="application" aria-label="가상 전시 공간. 드래그 또는 방향키로 둘러보기" tabIndex={0}/>
   {!entered&&<div className={entering?"entry entering":"entry"} onClick={enter} style={{backgroundImage:`linear-gradient(0deg,rgba(14,27,23,.45),rgba(14,27,23,.12) 65%,transparent),url(${asset('assets/entrance-exterior.webp')})`}}>
-    <div className="entry-copy"><div className="eyebrow"><span/> NEOIZE 2026 · 주요 행사 기록</div><h1 className="slogan">Respect<br/><em>differences</em></h1><p>네오아이즈의 2026년을 돌아보다.<br/>주요 행사와 함께한 뜻깊은 순간들을 만나보세요.</p><button className="enter-button" disabled={!ready||busy||!!error} onClick={e=>{e.stopPropagation();enter()}}>{busy?'전시 공간 준비 중':'전시관 입장하기'}<ArrowUpRight size={21}/></button><span className="entry-note">화면을 클릭하여 입장할 수 있습니다</span></div>
+    <div className="entry-copy">
+  <h1 className="slogan">
+    NEOIZE 2026<br />
+    주요 행사 기록
+  </h1>
+
+  <button
+    className="enter-button"
+    disabled={!ready || busy || !!error}
+    onClick={e => {
+      e.stopPropagation();
+      enter();
+    }}
+  >
+    {busy ? '전시 공간 준비 중' : '전시관 입장하기'}
+    <ArrowUpRight size={21} />
+  </button>
+
+  <span className="entry-note">
+    화면을 클릭하여 입장할 수 있습니다
+  </span>
+</div>
     <div className="entry-bottom"><span>Respect differences</span><span>NEOIZE · 2026 EVENT ARCHIVE</span></div>
   </div>}
   <header>{!entered&&<a className="brand" href="#" onClick={e=>{e.preventDefault();viewer.current?.reset();}}><img className="brand-logo" src={asset("assets/neoize-logo.png")} alt="네오아이즈 — Respect differences"/><span className="brand-sub">2026 주요 행사</span></a>}<div className="header-right">{!entered&&<><span className="live-dot"/>NEOIZE EVENTS <span className="year">2026</span></>}{entered&&<button className="icon-button home" title="첫 지점으로" aria-label="첫 지점으로" onClick={()=>viewer.current.reset()}><RotateCcw size={18}/></button>}</div></header>
