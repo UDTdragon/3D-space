@@ -10,7 +10,7 @@ export async function createViewer(container,{onArtwork,onStation,onBusy,onError
  function trimCache(){for(const [index,promise]of cache){if(index!==current&&index!==Math.min(current+1,stations.length-1)){promise.then(t=>t.dispose());cache.delete(index);}}}
  const textureLoader=new T.TextureLoader();
  const introTex=await textureLoader.loadAsync(asset('assets/wall-introduction.svg'));introTex.colorSpace=T.SRGBColorSpace;
- const introduction=new T.Mesh(new T.PlaneGeometry(3.0,2.35),new T.MeshBasicMaterial({map:introTex,transparent:true,depthWrite:false}));introduction.position.set(3.925,2.18,2.8);introduction.rotation.y=-Math.PI/2;scene.add(introduction);
+ const introduction=new T.Mesh(new T.PlaneGeometry(3.0,2.35),new T.MeshBasicMaterial({map:introTex,transparent:true,depthWrite:false}));introduction.position.set(3.925, 2.18, 6.1);introduction.rotation.y=-Math.PI/2;scene.add(introduction);
  await Promise.all(artworks.map(async art=>{const group=new T.Group();group.position.fromArray(art.position);group.rotation.y=art.rotation;frames.add(group);
    const frame=new T.Mesh(new T.BoxGeometry(2.48,1.66,.055),new T.MeshBasicMaterial({color:'#f1eee8'}));group.add(frame);
    const inner=new T.Mesh(new T.PlaneGeometry(2.32,1.50),new T.MeshBasicMaterial({color:'#bdb9b1'}));inner.position.z=.031;group.add(inner);
