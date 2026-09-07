@@ -16,7 +16,7 @@ export async function createViewer(container,{onArtwork,onStation,onBusy,onError
    const picture=new T.Mesh(new T.PlaneGeometry(2.23,1.41),new T.MeshBasicMaterial({map:tex}));picture.position.z=.033;group.add(picture);group.userData.artwork=art;
  }));
  stations.forEach((station,index)=>{const ring=new T.Mesh(new T.RingGeometry(.20,.25,64),new T.MeshBasicMaterial({color:'#ffffff',side:T.DoubleSide,transparent:true,opacity:.95,depthTest:true}));ring.rotation.x=-Math.PI/2;ring.position.set(station.position[0],.021,station.position[2]);ring.userData.station=index;markers.add(ring);
- const dot=new T.Mesh(new T.CircleGeometry(.055,32),new T.MeshBasicMaterial({color:'#ffffff',side:T.DoubleSide}));dot.rotation.x=-Math.PI/2;dot.position.copy(ring.position);dot.userData.station=index;markers.add(dot);});
+ const dot=new T.Mesh(new T.CircleGeometry(.055,32),new T.MeshBasicMaterial({color:'#ffffff',side:T.DoubleSide}));dot.rotation.x=-Math.PI/2;dot.position.copy(ring.position);dot.userData.station=index;markers.add(dot); const target=new T.Mesh(new T.CircleGeometry(.27,32),new T.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false,side:T.DoubleSide}));target.rotation.copy(dot.rotation);target.position.copy(dot.position);target.userData.station=index;markers.add(target);});
  const resize=()=>{const {width,height}=container.getBoundingClientRect();renderer.setSize(width,height);camera.aspect=width/height;camera.updateProjectionMatrix();};const ro=new ResizeObserver(resize);ro.observe(container);resize();
  function aim(){camera.rotation.order='YXZ';camera.rotation.set(pitch,yaw,0);}
  function refresh(){camera.position.fromArray(stations[current].position);for(const m of markers.children)m.visible=m.userData.station!==current;aim();onStation(current);}
@@ -34,4 +34,5 @@ export async function createViewer(container,{onArtwork,onStation,onBusy,onError
  renderer.setAnimationLoop(()=>{if(!disposed)renderer.render(scene,camera)});await move(0,true);
  return {move,enter(){enabled=true;},block(value){blocked=value;drag=null;},reset(){yaw=.12;pitch=.025;camera.fov=72;camera.updateProjectionMatrix();aim();move(0)},zoom(delta){camera.fov=T.MathUtils.clamp(camera.fov+delta,45,90);camera.updateProjectionMatrix()},inspect(){return{station:current,yaw,pitch,fov:camera.fov}},project(id,type='artwork'){let p;if(type==='station')p=new T.Vector3(stations[id].position[0],.021,stations[id].position[2]);else p=new T.Vector3(...artworks.find(a=>a.id===id).position);p.project(camera);const r=canvas.getBoundingClientRect();return{x:r.left+(p.x+1)*r.width/2,y:r.top+(1-p.y)*r.height/2,visible:Math.abs(p.x)<1&&Math.abs(p.y)<1&&p.z<1}},dispose(){disposed=true;ro.disconnect();window.removeEventListener('keydown',key);renderer.setAnimationLoop(null);scene.traverse(o=>{o.geometry?.dispose();if(o.material){o.material.map?.dispose();o.material.dispose()}});cache.forEach(p=>p.then(t=>t.dispose()));renderer.dispose();canvas.remove();}};
 }
+
 

@@ -12,4 +12,5 @@ export const artworks = [
  {id:'ai',title:'AI Work Smart',category:'FUTURE OF WORK',description:'반복되는 일에서 벗어나 더 중요한 일에 집중합니다. AI와 함께 문제를 정의하고 아이디어를 확장하며 새로운 업무 방식을 탐색합니다.',color:'#184e90',accent:'#a9dbff',position:[3.91,2.25,-5],rotation:-Math.PI/2},
  {id:'growth',title:'다음의 가능성',category:'LEARNING & GROWTH',description:'배움은 새로운 시선에서 시작됩니다. 오늘의 발견을 내일의 행동으로 연결하고, 개인과 조직이 함께 성장하는 가능성을 상상합니다.',color:'#3c336f',accent:'#d9c8ff',position:[1.6,2.25,-8.89],rotation:0},
  {id:'together',title:'함께, 더 멀리',category:'PEOPLE & CULTURE',description:'좋은 협업은 서로를 이해하는 데서 시작합니다. 공동의 목표와 열린 대화로 연결되는 팀, 함께 만들어가는 성장의 이야기를 만나보세요.',color:'#a77d17',accent:'#ffebaf',position:[-1.6,2.25,-8.89],rotation:0},
-].map(art=>({...art,image:`artworks/${art.id}.svg`,pdf:null}));
+].map(art=>({image:`artworks/${art.id}.svg`,pdf:null,...art}));
+
