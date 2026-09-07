@@ -34,7 +34,6 @@ function App(){const host=useRef(),viewer=useRef();const [entered,setEntered]=us
     화면을 클릭하여 입장할 수 있습니다
   </span>
 </div>
-    <div className="entry-bottom"><span>Respect differences</span><span>NEOIZE · 2026 EVENT ARCHIVE</span></div>
   </div>}
   <header>{!entered&&<a className="brand" href="#" onClick={e=>{e.preventDefault();viewer.current?.reset();}}><img className="brand-logo" src={asset("assets/neoize-logo.png")} alt="네오아이즈 — Respect differences"/><span className="brand-sub">2026 주요 행사</span></a>}<div className="header-right">{!entered&&<><span className="live-dot"/>NEOIZE EVENTS <span className="year">2026</span></>}{entered&&<button className="icon-button home" title="첫 지점으로" aria-label="첫 지점으로" onClick={()=>viewer.current.reset()}><RotateCcw size={18}/></button>}</div></header>
   {entered&&<>
