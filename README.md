@@ -1,4 +1,4 @@
-# EXPERT 가상 전시관
+# 네오아이즈 2026 주요 행사 전시관
 
 밝은 석고 벽, 천장 보, 레일 조명, 큰 창과 가을 풍경을 표현한 정적 360° 전시관입니다. 원본 스크린샷의 정확한 공간 복원이 아니라, 참고 이미지를 바탕으로 새로 구성한 공통 공간 모델입니다.
 
@@ -19,7 +19,7 @@ GitHub 저장소 Settings → Pages → Source에서 **GitHub Actions**를 선�
 
 ## 작품 교체
 
-현재 작품 6점은 교체용 타이포그래피 샘플입니다. `public/artworks/`의 SVG를 같은 이름으로 수정하면 모든 지점과 확대 화면에 동시에 반영됩니다. JPG/PNG/WebP로 바꾸려면 src/data.js의 해당 작품 image 값을 public 아래의 상대 경로로 지정하세요. pdf 값을 documents/example.pdf처럼 지정하면 상세 창에 PDF 링크가 나타납니다. 제목·설명·벽면 위치·회전은 `src/data.js`에서 관리합니다. 기존 이미지는 배경에 합성되어 있지 않습니다.
+Respect differences 슬로건과 첨부 네오아이즈 로고를 사용합니다. 실제 행사 자료는 아직 제공되지 않아 6개 행사 기록은 준비 중 안내로 표시합니다. `public/artworks/`의 SVG를 같은 이름으로 수정하면 모든 지점과 확대 화면에 동시에 반영됩니다. JPG/PNG/WebP로 바꾸려면 src/data.js의 해당 작품 image 값을 public 아래의 상대 경로로 지정하세요. pdf 값을 documents/example.pdf처럼 지정하면 상세 창에 PDF 링크가 나타납니다. 제목·설명·벽면 위치·회전은 `src/data.js`에서 관리합니다. 기존 이미지는 배경에 합성되어 있지 않습니다.
 
 PDF나 GLB를 추가할 경우 `public/` 아래에 넣고 `asset('documents/example.pdf')`처럼 상대 경로로 참조하세요. 원본 PDF·GLB는 제공되지 않아 이 버전에는 포함하지 않았습니다.
 
