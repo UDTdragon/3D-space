@@ -35,8 +35,28 @@ function App(){const host=useRef(),viewer=useRef();const [entered,setEntered]=us
   </span>
 </div>
   </div>}
-  <header>{!entered&&<a className="brand" href="#" onClick={e=>{e.preventDefault();viewer.current?.reset();}}><img className="brand-logo" src={asset("assets/neoize-logo.png")} alt="네오아이즈 — Respect differences"/><span className="brand-sub">2026 주요 행사</span></a>}<div className="header-right">{!entered&&<><span className="live-dot"/>NEOIZE EVENTS <span className="year">2026</span></>}{entered&&<button className="icon-button home" title="첫 지점으로" aria-label="첫 지점으로" onClick={()=>viewer.current.reset()}><RotateCcw size={18}/></button>}</div></header>
-  {entered&&<>
+  <header>
+  <div className="header-right">
+    {!entered && (
+      <>
+        <span className="live-dot" />
+        NEOIZE EVENTS
+        <span className="year">2026</span>
+      </>
+    )}
+
+    {entered && (
+      <button
+        className="icon-button home"
+        title="첫 지점으로"
+        aria-label="첫 지점으로"
+        onClick={() => viewer.current.reset()}
+      >
+        <RotateCcw size={18} />
+      </button>
+    )}
+  </div>
+</header>
   <div className="right-controls"><button className="icon-button" aria-label="확대" onClick={()=>viewer.current.zoom(-8)}><Plus size={19}/></button><button className="icon-button" aria-label="축소" onClick={()=>viewer.current.zoom(8)}><Minus size={19}/></button><button className="icon-button" aria-label="전체 화면" onClick={()=>{if(document.fullscreenElement)document.exitFullscreen?.();else document.documentElement.requestFullscreen?.().catch(()=>setError('이 브라우저에서는 전체 화면을 사용할 수 없습니다.'));}}><Maximize size={17}/></button></div>
   <footer><div className="hint"><Move size={18}/><span>드래그하여 둘러보기<br/><small>바닥의 원을 눌러 이동하세요</small></span></div><button className="collection-button" onClick={()=>setList(true)}>행사 목록 <ArrowUpRight size={17}/></button></footer></>}
   {busy&&entered&&<div className="loading" role="status">다음 공간을 불러오고 있습니다<span className="spinner"/></div>}
