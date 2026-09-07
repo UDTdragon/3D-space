@@ -4,7 +4,7 @@ import {stations,artworks} from '../src/data.js';
 function screen(position,station,yaw,pitch,width=1440,height=900){const c=new T.PerspectiveCamera(72,width/height,.05,100);c.position.fromArray(stations[station].position);c.rotation.order='YXZ';c.rotation.set(pitch,yaw,0);c.updateMatrixWorld();const p=new T.Vector3(...position).project(c);return{x:(p.x+1)*width/2,y:(1-p.y)*height/2};}
 test('outside entry, clear interior, event one and floor-only navigation',async({page})=>{
  const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('./');
- await expect(page.locator('.brand-logo')).toBeVisible();await expect(page.locator('.entry')).toHaveCSS('background-image',/entrance-exterior.webp/);
+ await expect(page.locator('.brand-logo')).toHaveCount(0);await expect(page.getByRole('heading',{name:/NEOIZE 2026/})).toBeVisible();await expect(page.locator('.entry')).toHaveCSS('background-image',/entrance-exterior.webp/);
  const enter=page.getByRole('button',{name:'전시관 입장하기'});await expect(enter).toBeEnabled({timeout:60000});await page.screenshot({path:'test-results/door-entry.png'});await enter.click();
  await expect(page.locator('.entry')).toHaveCount(0);await expect(page.locator('.brand')).toHaveCount(0);await expect(page.locator('.location')).toHaveCount(0);await expect(page.locator('.station-nav')).toHaveCount(0);
  await page.waitForTimeout(700);await page.screenshot({path:'test-results/intro-wall.png'});
@@ -14,3 +14,4 @@ test('outside entry, clear interior, event one and floor-only navigation',async(
  await page.getByRole('button',{name:'첫 지점으로',exact:true}).click();await expect(page.locator('.room')).toHaveAttribute('data-station','0');expect(errors).toEqual([]);
 });
 test('mobile has no branding or numbered navigation after entry',async({page})=>{await page.setViewportSize({width:390,height:844});await page.goto('./');await page.getByRole('button',{name:'전시관 입장하기'}).click();await expect(page.locator('.entry')).toHaveCount(0);await expect(page.locator('.brand')).toHaveCount(0);await expect(page.locator('.station-nav')).toHaveCount(0);await page.getByRole('button',{name:'행사 목록',exact:true}).click();await page.getByRole('button',{name:'주요 행사 01',exact:true}).click();await expect(page.getByRole('heading',{name:'주요 행사 01'})).toBeVisible();await page.keyboard.press('Escape');await page.waitForTimeout(400);await page.screenshot({path:'test-results/mobile.png'});});
+
