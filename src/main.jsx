@@ -14,8 +14,7 @@ function App(){const host=useRef(),viewer=useRef();const [entered,setEntered]=us
   {!entered&&<div className={entering?"entry entering":"entry"} onClick={enter} style={{backgroundImage:`linear-gradient(0deg,rgba(14,27,23,.45),rgba(14,27,23,.12) 65%,transparent),url(${asset('assets/entrance-exterior.webp')})`}}>
     <div className="entry-copy">
   <h1 className="slogan">
-    2026<br/>
-    NEOIZE <br/>
+    NEOIZE 2026<br/>
     주요 행사 기록
   </h1>
 
@@ -58,6 +57,7 @@ function App(){const host=useRef(),viewer=useRef();const [entered,setEntered]=us
     )}
   </div>
 </header>
+  {entered&&<>
   <div className="right-controls"><button className="icon-button" aria-label="확대" onClick={()=>viewer.current.zoom(-8)}><Plus size={19}/></button><button className="icon-button" aria-label="축소" onClick={()=>viewer.current.zoom(8)}><Minus size={19}/></button><button className="icon-button" aria-label="전체 화면" onClick={()=>{if(document.fullscreenElement)document.exitFullscreen?.();else document.documentElement.requestFullscreen?.().catch(()=>setError('이 브라우저에서는 전체 화면을 사용할 수 없습니다.'));}}><Maximize size={17}/></button></div>
   <footer><div className="hint"><Move size={18}/><span>드래그하여 둘러보기<br/><small>바닥의 원을 눌러 이동하세요</small></span></div><button className="collection-button" onClick={()=>setList(true)}>행사 목록 <ArrowUpRight size={17}/></button></footer></>}
   {busy&&entered&&<div className="loading" role="status">다음 공간을 불러오고 있습니다<span className="spinner"/></div>}
@@ -66,5 +66,4 @@ function App(){const host=useRef(),viewer=useRef();const [entered,setEntered]=us
   <Dialog open={list} onOpenChange={setList}><DialogContent className="list-dialog" showCloseButton={false}><button className="close-dialog" aria-label="닫기" onClick={()=>setList(false)}><X/></button><DialogTitle>행사 목록</DialogTitle><DialogDescription>2026년 네오아이즈의 주요 행사들을 만나보세요.</DialogDescription><div className="art-grid">{artworks.map(a=><button key={a.id} onClick={()=>{setList(false);setArt(a)}}><img src={asset(a.image)} alt=""/>{a.title}<ArrowUpRight size={16}/></button>)}</div></DialogContent></Dialog>
  </main>;
 }createRoot(document.getElementById('root')).render(<App/>);
-
 

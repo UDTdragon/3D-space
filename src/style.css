@@ -12,3 +12,6 @@
 .entry{transform-origin:50% 55%;transition:transform .65s ease,opacity .65s ease}.entry.entering{transform:scale(1.2);opacity:0}.entry.entering .entry-copy{opacity:0;transition:opacity .2s}
 .entry-copy{left:50%;top:49%;transform:translate(-50%,-30%);text-align:center;min-width:540px;text-shadow:0 2px 15px #0007}.entry-copy .eyebrow{justify-content:center}.entry-copy h1.slogan{font-size:clamp(42px,4vw,64px);line-height:1.06;margin:18px 0}.entry-copy p{margin:20px auto 0;max-width:510px}.entry-copy .enter-button{margin:28px auto 0;text-shadow:none}.entry-copy .entry-note{margin-top:12px}.entry-bottom{pointer-events:none}
 @media(max-width:800px){.entry-copy{min-width:0;width:92%;top:44%;transform:translate(-50%,-20%)}.entry-copy h1.slogan{font-size:48px}.entry-copy p{max-width:330px;font-size:14px}.entry-copy .eyebrow{font-size:10px;letter-spacing:1px}}
+
+.exhibition>header{justify-content:flex-end}
+
