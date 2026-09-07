@@ -10,7 +10,7 @@ export const stations = [
   {id:'horizon',name:'우리의 2026',position:[0,1.65,-6.1]},
 ];
 export const artworks = [
- {id:'deib',title:'주요 행사 01',category:'NEOIZE 2026 EVENTS',description:'2026년 네오아이즈의 주요 행사와 함께한 순간을 소개합니다. 상세 행사 이야기를 준비하고 있습니다.',color:'#08634d',accent:'#80e6b0',position:[3.91,2.25,6.1],rotation:-Math.PI/2},
+ {id:'deib',title:'주요 행사 01',category:'NEOIZE 2026 EVENTS',description:'2026년 네오아이즈의 주요 행사와 함께한 순간을 소개합니다. 상세 행사 이야기를 준비하고 있습니다.',color:'#08634d',accent:'#80e6b0',position:[3.91,2.25,2.8],rotation:-Math.PI/2},
  {id:'warm',title:'주요 행사 02',category:'NEOIZE 2026 EVENTS',description:'2026년 네오아이즈의 주요 행사와 함께한 순간을 소개합니다. 상세 행사 이야기를 준비하고 있습니다.',color:'#a63f28',accent:'#ffceab',position:[3.91,2.25,-.2],rotation:-Math.PI/2},
  {id:'phone',title:'주요 행사 03',category:'NEOIZE 2026 EVENTS',description:'2026년 네오아이즈의 주요 행사와 함께한 순간을 소개합니다. 상세 행사 이야기를 준비하고 있습니다.',color:'#be286f',accent:'#ffdbe9',position:[3.91,2.25,-3.0],rotation:-Math.PI/2},
  {id:'ai',title:'주요 행사 04',category:'NEOIZE 2026 EVENTS',description:'2026년 네오아이즈의 주요 행사와 함께한 순간을 소개합니다. 상세 행사 이야기를 준비하고 있습니다.',color:'#184e90',accent:'#a9dbff',position:[3.91,2.25,-5.8],rotation:-Math.PI/2},
