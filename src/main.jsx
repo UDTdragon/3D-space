@@ -14,7 +14,8 @@ function App(){const host=useRef(),viewer=useRef();const [entered,setEntered]=us
   {!entered&&<div className={entering?"entry entering":"entry"} onClick={enter} style={{backgroundImage:`linear-gradient(0deg,rgba(14,27,23,.45),rgba(14,27,23,.12) 65%,transparent),url(${asset('assets/entrance-exterior.webp')})`}}>
     <div className="entry-copy">
   <h1 className="slogan">
-    NEOIZE 2026<br />
+    2026<br/>
+    NEOIZE <br/>
     주요 행사 기록
   </h1>
 
