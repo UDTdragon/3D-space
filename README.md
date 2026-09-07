@@ -12,7 +12,7 @@ GitHub 저장소 Settings → Pages → Source에서 **GitHub Actions**를 선�
 
 1. `src/room.js`는 모든 관람 지점이 공유하는 공간 구조, 석고 재질, 창틀, 조명, 외부 이미지 위치를 정의합니다.
 2. `src/data.js`의 관람 좌표에서 각각 여섯 방향을 동일한 조건으로 렌더링합니다. Chrome이 설치된 제작 환경에서 로컬 개발 서버를 켜고 `npm run bake -- --first`로 대표 지점을 먼저 만듭니다.
-3. `public/assets/representative.webp`를 확인한 뒤 `npm run bake`로 전체 지점을 출력합니다. 면당 1536px의 압축 WebP 큐브맵이며 원근과 조명은 동일 모델 기준입니다. 별도의 실측 360 원본은 제공되지 않았습니다.
+3. `public/assets/representative.webp`를 확인한 뒤 `npm run bake`로 전체 지점을 출력합니다. 면당 2048px의 압축 WebP 큐브맵이며 원근과 조명은 동일 모델 기준입니다. 별도의 실측 360 원본은 제공되지 않았습니다.
 4. 배포용 실행 코드에서는 실내 모델을 실시간 렌더링하지 않고 이 큐브맵을 사용합니다. 액자와 바닥 이동 표시는 별도 3D 요소입니다.
 
 `scripts/bake.mjs`와 `src/bake.js`는 제작 도구이며 최종 이용 화면에는 포함되지 않습니다. 더 높은 수준의 실사 질감이 필요하면 동일 좌표와 축 규약을 유지한 오프라인 렌더러 출력으로 배경 파일을 교체할 수 있습니다.
@@ -25,7 +25,7 @@ PDF나 GLB를 추가할 경우 `public/` 아래에 넣고 `asset('documents/exam
 
 ## 동작 및 최적화
 
-- 입장 후 드래그/방향키 회전, 바닥 원/하단 관람 지점 이동, 휠·버튼 확대, 액자 클릭과 상세 보기.
+- 문밖 전실에서 입장 후 드래그/방향키 회전, 바닥 원 이동, 휠·버튼 확대, 액자 클릭과 상세 보기.
 - 이동 시 월드 기준 yaw/pitch를 보존하며 배경과 전시 좌표를 함께 전환합니다.
 - 상세 창에서 Esc 또는 닫기로 돌아가면 시점과 확대 수준이 보존됩니다.
 - 첫 지점 우선 로드, 다음 지점 프리로드, 현재/다음 지점 외 텍스처 해제, 기기 픽셀 비율 제한.
@@ -33,3 +33,17 @@ PDF나 GLB를 추가할 경우 `public/` 아래에 넣고 `asset('documents/exam
 
 외부 가을 풍경은 내장 ImageGen으로 생성했습니다. 프롬프트: photorealistic sunny autumn park, golden and orange trees, stone path, grass, distant low brick buildings, blue sky, warm midday light, no window frames, interior, text or UI.
 
+
+## 입구와 첫 전시 벽
+
+첫 화면은 동일 공간 모델의 문밖 전실을 렌더링한 `public/assets/entrance-exterior.webp`입니다. 입장하면 소개와 행사 01이 나란히 있는 벽면을 바라봅니다. 소개 문구는 `public/assets/wall-introduction.svg`이며 별도 3D 평면으로 벽에 붙습니다. 입장 후 좌측 상단 로고/위치 문구와 하단 01~04 버튼은 표시하지 않습니다. 바닥 원으로 이동하며 키보드의 PageDown/PageUp으로도 지점 이동이 가능합니다.
+
+## 창밖 풍경을 고화질로 교체하는 방법
+
+현재 원본 `public/assets/autumn.webp`는 1774×887px입니다. 큰 창과 확대 시점에 비해 작은 원본이므로 파노라마 크기를 높이는 것만으로 나뭇잎 등의 디테일이 복원되지는 않습니다. 가로 6000~8000px 정도의 선명한 원본을 준비하고, 기존과 비슷한 가로 2:1 구도의 풍경을 사용하면 배치를 유지하기 좋습니다. 작은 이미지를 단순히 확대하는 것은 원본 디테일을 늘리지 않습니다.
+
+1. `node scripts/prepare-exterior.mjs "고해상도 원본 경로"`로 풍경만 변환합니다. 다른 행사 콘텐츠는 건드리지 않습니다. 또는 고화질 WebP를 `public/assets/autumn.webp`에 직접 넣습니다.
+2. `npm run dev`를 실행한 상태에서 별도 터미널로 `npm run bake`를 실행합니다. 기본값은 큐브면 2048×2048, WebP 품질 95입니다. 더 큰 출력을 원하면 PowerShell에서 `$env:PANORAMA_SIZE=3072`를 설정한 후 실행할 수 있지만, 다운로드와 GPU 메모리 사용량도 늘어납니다.
+3. 생성된 `public/panoramas/`의 4개 지점 전체와 `public/assets/entrance-exterior.webp`, `public/assets/representative.webp`, 원본 풍경 파일을 함께 커밋합니다. 그다음 GitHub Actions가 배포합니다.
+
+GitHub에서 `autumn.webp`만 업로드하면 관람 중 배경은 바뀌지 않습니다. GitHub Actions는 웹 빌드·배포만 수행하며 공간 이미지를 재렌더링하지 않습니다. 이번 변경에서는 원본 풍경은 유지했고, 파노라마 출력만 1536px에서 2048px로 높였습니다.
