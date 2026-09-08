@@ -20,23 +20,6 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Rebuild 360 panoramas
-        shell: bash
-        run: |
-          npm run dev > /tmp/gallery-vite.log 2>&1 &
-          VITE_PID=$!
-          trap 'kill "$VITE_PID" 2>/dev/null || true' EXIT
-          for i in {1..60}; do
-            if curl --fail --silent http://127.0.0.1:5173/bake.html > /dev/null; then
-              break
-            fi
-            if [ "$i" -eq 60 ]; then
-              cat /tmp/gallery-vite.log
-              exit 1
-            fi
-            sleep 1
-          done
-          PANORAMA_SIZE=2048 npm run bake
       - run: npm run build
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
@@ -51,4 +34,3 @@ jobs:
     steps:
       - uses: actions/deploy-pages@v4
         id: deployment
-

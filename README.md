@@ -8,6 +8,21 @@ Node 22 이상에서 `npm ci`, `npm run dev`로 실행합니다. `npm run build`
 
 GitHub 저장소 Settings → Pages → Source에서 **GitHub Actions**를 선택하면 main 브랜치 push마다 `.github/workflows/deploy.yml`이 빌드하고 배포합니다.
 
+## Blender 배경 적용 및 이후 수정
+
+관람 배경은 `neoize-gallery-material-lighting-edited.blend`에서 Cycles로 렌더링한 큐브맵을 사용합니다. 네 관람 지점 × 여섯 면, 면당 2048×2048px, 24샘플과 디노이즈로 출력한 WebP입니다. 작품과 소개 문구는 웹에서 별도 표시하므로 Blender 배경에 합치지 않습니다.
+
+렌더 스크립트는 `scripts/render-blender.py`이며 NVIDIA OptiX GPU를 사용합니다. 다른 장치에서는 해당 GPU 설정을 환경에 맞게 조정하세요. 출력 폴더의 기존 PNG는 건너뛰므로 재질을 수정한 후에는 새 출력 폴더를 지정해야 합니다.
+
+1. Blender에서 창틀·벽 재질·조명을 수정합니다. 관람 카메라의 위치·회전·90도 시야각은 유지합니다.
+2. `entrance`, `discovery`, `connection`, `horizon` 지점별로 `px`, `nx`, `py`, `ny`, `pz`, `nz` 카메라를 정사각형 PNG로 출력합니다. 모든 면에 동일한 노출과 색상 관리를 사용합니다.
+3. `node scripts/import-blender.mjs "렌더 폴더"`를 실행합니다. 24개 PNG의 존재와 크기를 검사한 뒤 `public/panoramas/`를 압축 WebP로 교체합니다.
+4. `src/viewer.js`의 파노라마 URL 버전을 갱신하고 빌드·미리보기에서 방향과 액자 정렬을 확인한 뒤 커밋합니다.
+
+GitHub Actions는 커밋된 파노라마를 그대로 배포합니다. 기존 `npm run bake`는 Three.js 공간 제작용 도구로, 실행하면 Blender 배경을 기존 공간 이미지로 덮어씁니다. 아래의 Three.js 제작 설명은 이전 제작 방식의 참고입니다.
+
+창밖 사진만 GitHub에 올려도 Blender 배경은 바뀌지 않습니다. Blender의 외부 풍경 이미지도 교체하고 네 지점을 다시 렌더링해야 합니다. 첫 화면의 `public/assets/entrance-exterior.webp`는 별도 이미지이며 이번 실내 큐브맵 교체 대상과 다릅니다.
+
 ## 공간 자료 제작과 웹 기능
 
 1. `src/room.js`는 모든 관람 지점이 공유하는 공간 구조, 석고 재질, 창틀, 조명, 외부 이미지 위치를 정의합니다.
