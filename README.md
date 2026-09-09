@@ -10,7 +10,9 @@ GitHub 저장소 Settings → Pages → Source에서 **GitHub Actions**를 선�
 
 ## Blender 배경 적용 및 이후 수정
 
-관람 배경은 `neoize-gallery-material-lighting-edited.blend`에서 Cycles로 렌더링한 큐브맵을 사용합니다. 네 관람 지점 × 여섯 면, 면당 2048×2048px, 24샘플과 디노이즈로 출력한 WebP입니다. 작품과 소개 문구는 웹에서 별도 표시하므로 Blender 배경에 합치지 않습니다.
+2026-09-09: 유리의 거친 투과를 없애 창밖 사진의 선명도를 유지하고, 약한 유리 반사만 남겼습니다. 햇빛과 실내 조명을 강화하고 바닥 색을 조정해 채광과 창틀 그림자가 잘 구분되도록 했습니다.
+
+관람 배경은 `neoize-gallery-clear-daylight.blend`에서 Cycles로 렌더링한 큐브맵을 사용합니다. 네 관람 지점 × 여섯 면, 면당 2048×2048px, 48샘플과 디노이즈로 출력한 WebP입니다. 작품과 소개 문구는 웹에서 별도 표시하므로 Blender 배경에 합치지 않습니다.
 
 렌더 스크립트는 `scripts/render-blender.py`이며 NVIDIA OptiX GPU를 사용합니다. 다른 장치에서는 해당 GPU 설정을 환경에 맞게 조정하세요. 출력 폴더의 기존 PNG는 건너뛰므로 재질을 수정한 후에는 새 출력 폴더를 지정해야 합니다.
 
