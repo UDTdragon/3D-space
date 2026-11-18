@@ -13,7 +13,7 @@ export const asset = (path) => {
 export const site = {
   bgm: null,
   inquiry: null,
-  dragSpeed: .7,
+  dragSpeed: .5,
   smoothing: .12,
 };
 
