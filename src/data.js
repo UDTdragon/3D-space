@@ -8,9 +8,13 @@ export const asset = (path) => {
 // Site-wide options.
 // bgm: an audio file under public/ (e.g. 'assets/bgm.mp3'). When null, a soft generated ambient tone is used.
 // inquiry: default "문의하기" link shown on every event that does not define its own links.
+// dragSpeed: how far the view turns while dragging. 1 = the wall stays under the cursor; lower is slower.
+// smoothing: how softly the view catches up (0 = instant, higher = softer).
 export const site = {
   bgm: null,
   inquiry: null,
+  dragSpeed: .7,
+  smoothing: .12,
 };
 
 // position: the camera point the panorama was rendered from (must match the Blender render).
