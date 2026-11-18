@@ -66,3 +66,17 @@ PDF나 GLB를 추가할 경우 `public/` 아래에 넣고 `asset('documents/exam
 3. 생성된 `public/panoramas/`의 4개 지점 전체와 `public/assets/entrance-exterior.webp`, `public/assets/representative.webp`, 원본 풍경 파일을 함께 커밋합니다. 그다음 GitHub Actions가 배포합니다.
 
 GitHub에서 `autumn.webp`만 업로드하면 관람 중 배경은 바뀌지 않습니다. GitHub Actions는 웹 빌드·배포만 수행하며 공간 이미지를 재렌더링하지 않습니다. 이번 변경에서는 원본 풍경은 유지했고, 파노라마 출력만 1536px에서 2048px로 높였습니다.
+
+## 관람 동선과 메뉴 (레퍼런스 대비 보완)
+
+- **지점 이동**: 네 지점 모두 바닥 원이 표시됩니다. 각 지점의 기본 시점에는 다음 지점 방향을 가리키는 `≪ 둘러보기`/`≫ 둘러보기` 표시가 떠 있으며, 누르면 다음 지점으로 이동합니다. 이동하면 항상 그 지점의 기본 시점(`src/data.js`의 `stations[].yaw`, `pitch`)을 바라봅니다. yaw 0은 안쪽 끝 벽, `-Math.PI/2`는 작품 벽 방향입니다.
+- **오른쪽 아래 메뉴**: 스피커 버튼은 배경음악을 켜고 끕니다. `+` 버튼은 지점 썸네일 메뉴를 열고, 썸네일을 누르면 해당 지점으로 이동합니다. 썸네일은 `public/thumbnails/{지점 id}.webp`(360×225)이며 기본 시점이나 공간을 바꾸면 다시 캡처해 교체하세요.
+- **배경음악**: `src/data.js`의 `site.bgm`에 `assets/bgm.mp3`처럼 public 아래 경로를 넣으면 그 파일을 반복 재생합니다. 비워 두면 브라우저에서 만든 잔잔한 앰비언트 음이 재생됩니다. 기본값은 꺼짐이며, 영상 슬라이드를 보는 동안에는 자동으로 소리가 줄어듭니다.
+- **행사 상세 슬라이드**: 행사마다 `slides` 배열에 이미지, `.mp4`, 유튜브 주소를 섞어 넣을 수 있습니다. 좌우 화살표나 키보드 ←/→로 넘기고, 마지막 장에서 다음으로 가면 다음 행사로 넘어갑니다. 지정하지 않으면 액자 이미지와 `public/artworks/detail-placeholder.svg`(준비 중 안내) 두 장이 표시됩니다.
+- **문의/외부 링크**: 행사마다 `links: [{label:'문의하기', url:'https://...'}]`를 지정하거나, `site.inquiry`에 주소를 넣어 모든 행사에 `문의하기` 버튼을 표시합니다.
+
+```js
+{id:'deib', title:'주요 행사 01', ...,
+ slides:['artworks/deib.svg','events/deib-1.jpg','events/deib-2.jpg','https://youtu.be/VIDEO_ID'],
+ links:[{label:'문의하기', url:'https://example.com/contact'}]}
+```
