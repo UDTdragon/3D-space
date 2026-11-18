@@ -80,3 +80,4 @@ GitHub에서 `autumn.webp`만 업로드하면 관람 중 배경은 바뀌지 않
  slides:['artworks/deib.svg','events/deib-1.jpg','events/deib-2.jpg','https://youtu.be/VIDEO_ID'],
  links:[{label:'문의하기', url:'https://example.com/contact'}]}
 ```
+- **시점 회전 속도**: `src/data.js`의 `site.dragSpeed`(기본 0.7)로 드래그할 때 시점이 도는 정도를 정합니다. 1이면 커서 아래의 벽이 손가락을 그대로 따라오고, 숫자가 작을수록 느려집니다. 화면 높이와 확대 정도에 맞춰 자동 보정됩니다. `site.smoothing`(기본 0.12)은 시점이 부드럽게 따라오는 정도이며 0이면 즉시 움직입니다.

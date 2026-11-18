@@ -1,5 +1,5 @@
 import * as T from 'three';
-import {asset,stations,artworks} from './data';
+import {asset,stations,artworks,site} from './data';
 
 const LAST = stations.length-1;
 const DEFAULT_FOV = 72;
@@ -8,7 +8,7 @@ export async function createViewer(container,{onArtwork,onStation,onBusy,onError
  const renderer=new T.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));renderer.outputColorSpace=T.SRGBColorSpace;container.appendChild(renderer.domElement);
  const scene=new T.Scene(),camera=new T.PerspectiveCamera(DEFAULT_FOV,1,.05,100);const ray=new T.Raycaster();const pointer=new T.Vector2();
  const frames=new T.Group(),markers=new T.Group();scene.add(frames,markers);
- let disposed=false,current=0,yaw=stations[0].yaw,pitch=stations[0].pitch,drag=null,enabled=false,blocked=false,busy=false;
+ let disposed=false,current=0,yaw=stations[0].yaw,pitch=stations[0].pitch,viewYaw=yaw,viewPitch=pitch,drag=null,enabled=false,blocked=false,busy=false;
  const cache=new Map();const loader=new T.CubeTextureLoader();
  async function load(index){if(cache.has(index))return cache.get(index);const pending=loader.loadAsync(['px','nx','py','ny','pz','nz'].map(f=>asset(`panoramas/${stations[index].id}/${f}.webp?v=clear-daylight-20260909`))).then(tex=>{tex.colorSpace=T.SRGBColorSpace;if(disposed)tex.dispose();return tex}).catch(e=>{cache.delete(index);throw e});cache.set(index,pending);return pending;}
  function trimCache(){for(const [index,promise]of cache){if(index!==current&&index!==Math.min(current+1,LAST)){promise.then(t=>t.dispose());cache.delete(index);}}}
@@ -32,8 +32,10 @@ export async function createViewer(container,{onArtwork,onStation,onBusy,onError
  });
 
  const resize=()=>{const {width,height}=container.getBoundingClientRect();renderer.setSize(width,height);camera.aspect=width/height;camera.updateProjectionMatrix();};const ro=new ResizeObserver(resize);ro.observe(container);resize();
- function aim(){camera.rotation.order='YXZ';camera.rotation.set(pitch,yaw,0);}
- function refresh(){camera.position.fromArray(stations[current].position);for(const m of markers.children)m.visible=m.userData.station!==current;aim();onStation(current);}
+ // yaw/pitch are the target direction; the camera eases toward them every frame (see the animation loop).
+ function aim(snap=false){if(snap||!site.smoothing){viewYaw=yaw;viewPitch=pitch;}camera.rotation.order='YXZ';camera.rotation.set(viewPitch,viewYaw,0);}
+ const dragRate=()=>site.dragSpeed*T.MathUtils.degToRad(camera.fov)/Math.max(1,renderer.domElement.clientHeight);
+ function refresh(){camera.position.fromArray(stations[current].position);for(const m of markers.children)m.visible=m.userData.station!==current;aim(true);onStation(current);}
 
  // face: 'default' turns to the station's curated view, 'keep' keeps the current direction.
  async function move(index,{face='default',initial=false}={}){
@@ -48,23 +50,26 @@ export async function createViewer(container,{onArtwork,onStation,onBusy,onError
  }
  function hit(event){const rect=renderer.domElement.getBoundingClientRect();pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);scene.updateMatrixWorld(true);camera.updateMatrixWorld(true);ray.setFromCamera(pointer,camera);return ray.intersectObjects([...frames.children,...markers.children],true).find(h=>h.object.visible&&h.object.parent.visible);}
  const down=e=>{if(!enabled||blocked||busy||e.button>0)return;drag={x:e.clientX,y:e.clientY,travel:0};renderer.domElement.setPointerCapture(e.pointerId);};
- const motion=e=>{if(drag){const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.travel+=Math.abs(dx)+Math.abs(dy);yaw+=dx*.0025;pitch=Math.max(-1.35,Math.min(1.35,pitch+dy*.0025));drag.x=e.clientX;drag.y=e.clientY;aim();}else if(enabled&&!blocked){renderer.domElement.style.cursor=hit(e)?'pointer':'grab';}};
+ const motion=e=>{if(drag){const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.travel+=Math.abs(dx)+Math.abs(dy);const k=dragRate();yaw+=dx*k;pitch=Math.max(-1.35,Math.min(1.35,pitch+dy*k));drag.x=e.clientX;drag.y=e.clientY;aim();}else if(enabled&&!blocked){renderer.domElement.style.cursor=hit(e)?'pointer':'grab';}};
  const up=e=>{if(!drag)return;const click=drag.travel<7;drag=null;if(click){const h=hit(e);if(h){let o=h.object;while(o&&!o.userData.artwork&&o.userData.station===undefined)o=o.parent;if(o?.userData.artwork)onArtwork(o.userData.artwork);else if(o?.userData.station!==undefined)void move(o.userData.station);}}};
  const cancel=()=>{drag=null};
  const key=e=>{if(!enabled||blocked||busy||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','PageDown','PageUp'].includes(e.key))return;e.preventDefault();if(e.key==='PageDown'){void move(Math.min(current+1,LAST));return;}if(e.key==='PageUp'){void move(Math.max(current-1,0));return;}if(e.key==='ArrowLeft')yaw+=.07;if(e.key==='ArrowRight')yaw-=.07;if(e.key==='ArrowUp')pitch=Math.min(1.35,pitch+.06);if(e.key==='ArrowDown')pitch=Math.max(-1.35,pitch-.06);aim();};
  const wheel=e=>{if(!enabled||blocked)return;e.preventDefault();camera.fov=T.MathUtils.clamp(camera.fov+e.deltaY*.018,45,90);camera.updateProjectionMatrix();};
  const canvas=renderer.domElement;canvas.addEventListener('pointerdown',down);canvas.addEventListener('pointermove',motion);canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',cancel);canvas.addEventListener('wheel',wheel,{passive:false});window.addEventListener('keydown',key);
- renderer.setAnimationLoop(()=>{if(!disposed)renderer.render(scene,camera)});
+ let last=performance.now();
+ renderer.setAnimationLoop(now=>{if(disposed)return;const dt=Math.min(.1,(now-last)/1000);last=now;
+  if(site.smoothing&&(viewYaw!==yaw||viewPitch!==pitch)){const f=1-Math.exp(-dt/site.smoothing*1.6);viewYaw+=(yaw-viewYaw)*f;viewPitch+=(pitch-viewPitch)*f;if(Math.abs(yaw-viewYaw)<1e-4&&Math.abs(pitch-viewPitch)<1e-4){viewYaw=yaw;viewPitch=pitch;}aim();}
+  renderer.render(scene,camera)});
  await move(0,{face:'default',initial:true});
  return {
   move:(index,opts)=>move(index,opts),
-  goto:(index)=>index===current?(yaw=stations[index].yaw,pitch=stations[index].pitch,aim()):move(index,{face:'default'}),
+  goto:(index)=>index===current?(yaw=stations[index].yaw,pitch=stations[index].pitch,aim(true)):move(index,{face:'default'}),
   enter(){enabled=true;},
   block(value){blocked=value;drag=null;},
-  reset(){camera.fov=DEFAULT_FOV;camera.updateProjectionMatrix();if(current===0){yaw=stations[0].yaw;pitch=stations[0].pitch;aim();}else void move(0,{face:'default'});},
+  reset(){camera.fov=DEFAULT_FOV;camera.updateProjectionMatrix();if(current===0){yaw=stations[0].yaw;pitch=stations[0].pitch;aim(true);}else void move(0,{face:'default'});},
   zoom(delta){camera.fov=T.MathUtils.clamp(camera.fov+delta,45,90);camera.updateProjectionMatrix()},
   inspect(){return{station:current,yaw,pitch,fov:camera.fov}},
-  look(y,p=pitch){yaw=y;pitch=p;aim();},
+  look(y,p=pitch){yaw=y;pitch=p;aim(true);},
   project(id,type='artwork'){let p;if(type==='station')p=new T.Vector3(stations[id].marker[0],.021,stations[id].marker[1]);else p=new T.Vector3(...artworks.find(a=>a.id===id).position);camera.updateMatrixWorld();p.project(camera);const r=canvas.getBoundingClientRect();return{x:r.left+(p.x+1)*r.width/2,y:r.top+(1-p.y)*r.height/2,visible:Math.abs(p.x)<1&&Math.abs(p.y)<1&&p.z<1}},
   dispose(){disposed=true;ro.disconnect();window.removeEventListener('keydown',key);renderer.setAnimationLoop(null);scene.traverse(o=>{o.geometry?.dispose();if(o.material){o.material.map?.dispose();o.material.dispose()}});cache.forEach(p=>p.then(t=>t.dispose()));renderer.dispose();canvas.remove();}
  };
