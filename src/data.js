@@ -13,14 +13,15 @@ export const site = {
   inquiry: null,
 };
 
-// yaw: the direction the camera faces when arriving from the menu or the home button
-// (0 = toward the far end wall, -PI/2 = toward the artwork wall).
+// position: the camera point the panorama was rendered from (must match the Blender render).
+// yaw: the direction the camera faces on arrival (0 = toward the far end wall, -PI/2 = toward the artwork wall).
+// Floor markers are drawn on one straight line down the hall (x = MARKER_X) at each station's depth.
+export const MARKER_X = 0;
 export const stations = [
   {id:'entrance',name:'2026 행사 돌아보기',position:[.5,1.65,4.4],yaw:-Math.PI/2,pitch:.025},
-  {id:'discovery',name:'함께한 순간들',position:[-.3,1.65,2.1],yaw:-1.2,pitch:.025},
   {id:'connection',name:'기억에 남을 장면들',position:[.3,1.65,-2.1],yaw:-.9,pitch:.025},
   {id:'horizon',name:'우리의 2026',position:[0,1.65,-6.1],yaw:0,pitch:.025},
-].map(station=>({thumbnail:`thumbnails/${station.id}.webp`,...station}));
+].map(station=>({thumbnail:`thumbnails/${station.id}.webp`,marker:[MARKER_X,station.position[2]],...station}));
 
 // Each event can hold several slides (images, .mp4 files or YouTube links) and optional links.
 // slides: ['artworks/deib.svg', 'events/deib-2.jpg', 'https://youtu.be/VIDEO_ID', 'events/deib.mp4']

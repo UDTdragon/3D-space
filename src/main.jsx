@@ -87,7 +87,7 @@ function App(){const host=useRef(),viewer=useRef(),bgm=useRef(null);const [enter
   {entered&&<>
    <div className="right-controls"><button className="icon-button" aria-label="확대" title="확대" onClick={()=>viewer.current.zoom(-8)}><ZoomIn size={18}/></button><button className="icon-button" aria-label="축소" title="축소" onClick={()=>viewer.current.zoom(8)}><ZoomOut size={18}/></button><button className="icon-button" aria-label="전체 화면" title="전체 화면" onClick={()=>{if(document.fullscreenElement)document.exitFullscreen?.();else document.documentElement.requestFullscreen?.().catch(()=>setError('이 브라우저에서는 전체 화면을 사용할 수 없습니다.'));}}><Maximize size={17}/></button></div>
    <footer>
-    <div className="hint"><Move size={18}/><span>드래그하여 둘러보기<br/><small>바닥의 원이나 ≫ 표시를 눌러 이동하세요</small></span></div>
+    <div className="hint"><Move size={18}/><span>드래그하여 둘러보기<br/><small>바닥의 원을 눌러 이동하세요</small></span></div>
     <button className="collection-button" onClick={()=>setList(true)}>행사 목록 <ArrowUpRight size={17}/></button>
     <div className="corner">
      <TourMenu open={menu} station={station} onPick={i=>{setMenu(false);viewer.current.goto(i)}}/>
