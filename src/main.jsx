@@ -1,6 +1,6 @@
 import React,{useCallback,useEffect,useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
-import {ArrowUpRight,ArrowLeft,ArrowRight,ChevronLeft,ChevronRight,RotateCcw,Plus,ZoomIn,ZoomOut,X,Move,Maximize,FileText,Volume2,VolumeX,MessageCircle} from 'lucide-react';
+import {ArrowUpRight,ArrowLeft,ArrowRight,ChevronLeft,ChevronRight,RotateCcw,Plus,ZoomIn,ZoomOut,X,Move,Maximize,FileText,Volume2,VolumeX,MessageCircle,Footprints} from 'lucide-react';
 import {Dialog,DialogContent,DialogTitle,DialogDescription} from '../components/ui/dialog';
 import {createViewer} from './viewer';
 import {createBgm} from './bgm';
@@ -59,15 +59,28 @@ function TourMenu({open,station,onPick}){
  </nav>;
 }
 
-function App(){const host=useRef(),viewer=useRef(),bgm=useRef(null);const [entered,setEntered]=useState(false),[entering,setEntering]=useState(false),[ready,setReady]=useState(false),[busy,setBusy]=useState(true),[station,setStation]=useState(0),[art,setArt]=useState(null),[slide,setSlide]=useState(0),[error,setError]=useState(''),[retry,setRetry]=useState(0),[list,setList]=useState(false),[menu,setMenu]=useState(false),[music,setMusic]=useState(false);
+// On-screen joystick for walking on touch screens. Reports -1..1 on each axis (y<0 = forward).
+function Joystick({onMove}){
+ const [knob,setKnob]=useState([0,0]);const base=useRef(null);
+ const update=e=>{const r=base.current.getBoundingClientRect(),R=r.width/2;let x=(e.clientX-r.left-R)/R,y=(e.clientY-r.top-R)/R;const d=Math.hypot(x,y);if(d>1){x/=d;y/=d;}setKnob([x,y]);onMove(x,y);};
+ const end=()=>{setKnob([0,0]);onMove(0,0);};
+ return <div className="joystick" ref={base} role="presentation" onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);update(e);}} onPointerMove={e=>{if(e.currentTarget.hasPointerCapture(e.pointerId))update(e);}} onPointerUp={end} onPointerCancel={end}>
+  <i style={{transform:`translate(${knob[0]*34}px,${knob[1]*34}px)`}}/>
+ </div>;
+}
+
+function App(){const host=useRef(),viewer=useRef(),bgm=useRef(null);const [entered,setEntered]=useState(false),[entering,setEntering]=useState(false),[ready,setReady]=useState(false),[busy,setBusy]=useState(true),[station,setStation]=useState(0),[art,setArt]=useState(null),[slide,setSlide]=useState(0),[error,setError]=useState(''),[retry,setRetry]=useState(0),[list,setList]=useState(false),[menu,setMenu]=useState(false),[music,setMusic]=useState(false),[walk,setWalk]=useState(false);
  const openArt=useCallback((a,s=0)=>{setArt(a);setSlide(s)},[]);
- useEffect(()=>{let cancelled=false;setReady(false);setError('');createViewer(host.current,{onArtwork:a=>openArt(a,0),onStation:setStation,onBusy:setBusy,onError:setError}).then(v=>{if(cancelled)v.dispose();else{viewer.current=v;setReady(true);if(entered)v.enter();if(import.meta.env.DEV)window.gallery=v;}}).catch(e=>{console.error(e);setBusy(false);setError('전시관을 열 수 없습니다. WebGL 지원과 네트워크 연결을 확인해주세요.')});return()=>{cancelled=true;viewer.current?.dispose();viewer.current=null;};},[retry]);
+ useEffect(()=>{let cancelled=false;setReady(false);setError('');createViewer(host.current,{onArtwork:a=>openArt(a,0),onStation:setStation,onBusy:setBusy,onError:setError,onMode:setWalk}).then(v=>{if(cancelled)v.dispose();else{viewer.current=v;setReady(true);if(entered)v.enter();if(import.meta.env.DEV)window.gallery=v;}}).catch(e=>{console.error(e);setBusy(false);setError('전시관을 열 수 없습니다. WebGL 지원과 네트워크 연결을 확인해주세요.')});return()=>{cancelled=true;viewer.current?.dispose();viewer.current=null;};},[retry]);
  useEffect(()=>{viewer.current?.block(Boolean(art)||list);},[art,list]);
  useEffect(()=>()=>bgm.current?.dispose(),[]);
  // Music fades out while a video slide is playing.
  const mediaSlide=art&&slideKind(art.slides[slide])!=='image';
  useEffect(()=>{if(!bgm.current&&!music)return;bgm.current??=createBgm(site.bgm&&asset(site.bgm));bgm.current.set(music&&!mediaSlide).catch(()=>setMusic(false));},[music,mediaSlide]);
  useEffect(()=>{if(!menu)return;const close=e=>{if(!e.target.closest('.corner'))setMenu(false)};const esc=e=>{if(e.key==='Escape')setMenu(false)};window.addEventListener('pointerdown',close);window.addEventListener('keydown',esc);return()=>{window.removeEventListener('pointerdown',close);window.removeEventListener('keydown',esc)}},[menu]);
+ const toggleWalk=useCallback(()=>{void viewer.current?.setWalk(!viewer.current.walking());},[]);
+ // V switches between the panorama view and walk mode.
+ useEffect(()=>{if(!entered)return;const key=e=>{if(e.code==='KeyV'&&!e.repeat&&!art&&!list&&!menu)toggleWalk();};window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key)},[entered,art,list,menu,toggleWalk]);
  const enter=()=>{if(!ready||busy||error||entering)return;setEntering(true);setTimeout(()=>{setEntered(true);setEntering(false);viewer.current.enter();},650);};
  return <main className={entered?'exhibition entered':'exhibition'}>
   <div className="room" data-station={station} ref={host} role="application" aria-label="가상 전시 공간. 드래그 또는 방향키로 둘러보기" tabIndex={0}/>
@@ -85,9 +98,10 @@ function App(){const host=useRef(),viewer=useRef(),bgm=useRef(null);const [enter
    </div>
   </header>
   {entered&&<>
-   <div className="right-controls"><button className="icon-button" aria-label="확대" title="확대" onClick={()=>viewer.current.zoom(-8)}><ZoomIn size={18}/></button><button className="icon-button" aria-label="축소" title="축소" onClick={()=>viewer.current.zoom(8)}><ZoomOut size={18}/></button><button className="icon-button" aria-label="전체 화면" title="전체 화면" onClick={()=>{if(document.fullscreenElement)document.exitFullscreen?.();else document.documentElement.requestFullscreen?.().catch(()=>setError('이 브라우저에서는 전체 화면을 사용할 수 없습니다.'));}}><Maximize size={17}/></button></div>
+   <div className="right-controls"><button className={walk?'icon-button on':'icon-button'} aria-pressed={walk} aria-label={walk?'걷기 모드 끄기':'걷기 모드 켜기'} title={walk?'걷기 모드 끄기 (V)':'걷기 모드 켜기 (V)'} onClick={toggleWalk}><Footprints size={18}/></button><button className="icon-button" aria-label="확대" title="확대" onClick={()=>viewer.current.zoom(-8)}><ZoomIn size={18}/></button><button className="icon-button" aria-label="축소" title="축소" onClick={()=>viewer.current.zoom(8)}><ZoomOut size={18}/></button><button className="icon-button" aria-label="전체 화면" title="전체 화면" onClick={()=>{if(document.fullscreenElement)document.exitFullscreen?.();else document.documentElement.requestFullscreen?.().catch(()=>setError('이 브라우저에서는 전체 화면을 사용할 수 없습니다.'));}}><Maximize size={17}/></button></div>
    <footer>
-    <div className="hint"><Move size={18}/><span>드래그하여 둘러보기<br/><small>바닥의 원을 눌러 이동하세요</small></span></div>
+    {walk?<div className="hint"><Footprints size={18}/><span>WASD · 방향키로 걷기 · 드래그로 둘러보기<br/><small>Shift 빠르게 · Q/E 회전 · V 고화질 보기로 돌아가기</small></span></div>
+     :<div className="hint"><Move size={18}/><span>드래그하여 둘러보기<br/><small>바닥의 원을 눌러 이동하세요 · V 걷기 모드</small></span></div>}
     <button className="collection-button" onClick={()=>setList(true)}>행사 목록 <ArrowUpRight size={17}/></button>
     <div className="corner">
      <TourMenu open={menu} station={station} onPick={i=>{setMenu(false);viewer.current.goto(i)}}/>
@@ -96,6 +110,7 @@ function App(){const host=useRef(),viewer=useRef(),bgm=useRef(null);const [enter
     </div>
    </footer>
   </>}
+  {entered&&walk&&!art&&!list&&<Joystick onMove={(x,y)=>viewer.current?.stick(x,y)}/>}
   {busy&&entered&&<div className="loading" role="status">다음 공간을 불러오고 있습니다<span className="spinner"/></div>}
   {error&&<div className="error" role="alert">{error}<button onClick={()=>{setError('');if(!ready||!viewer.current){setRetry(r=>r+1)}else void viewer.current.move(station,{face:'keep',initial:true})}}>다시 시도</button><button aria-label="알림 닫기" onClick={()=>setError('')}><X size={16}/></button></div>}
   <ArtDialog art={art} slide={slide} onSlide={setSlide} onArt={openArt} onClose={()=>setArt(null)}/>
