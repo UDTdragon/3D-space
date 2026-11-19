@@ -44,3 +44,30 @@ build_gallery.py는 초기 장면 재생성용입니다. 실행하면 새 장면
 Cycles 256 샘플, 디노이즈, 확산 반사 6회, 유리 투과 반사 6회와 AgX 색상 관리가 설정되어 있습니다. 조명을 수정할 때는 먼저 `Daylight_Sun`, `Window_Sky_Area`와 World Strength를 조정하고, 벽면 조명 원은 `Gallery_Track_Spot`의 Power와 Spot Size로 조정하세요.
 
 `modify_materials_lighting.py`를 실행하면 창문 수정본을 기준으로 재질·조명 파일을 다시 생성합니다. Blender에서 직접 편집한 결과를 보존하려면 다른 파일명으로 저장하세요.
+## 레퍼런스 느낌 개선본 (`neoize-gallery-reference-look.blend`)
+
+`improve_reference_look.py`가 `neoize-gallery-clear-daylight.blend`(현재 사이트 화면의 원본)를 열어 아래를 적용한 뒤 `neoize-gallery-reference-look.blend`로 저장합니다. 원본은 바뀌지 않습니다.
+
+1. **바닥 반사** (`MAT_Floor_Tiles`): Roughness 0.32 → 0.03~0.10(바닥 전체에 걸쳐 조금씩 다름), 색을 덜 푸르고 조금 어둡게, 타일마다 밝기를 약간씩 다르게 했습니다.
+2. **빛 대비**: `Ceiling_Indirect_Fill` 28 → 10, World 0.14 → 0.10, `Window_Sky_Area` 110 → 70, `Daylight_Sun` 5 → 7, 창밖 사진 밝기 1.65 → 2.4.
+3. **액자 스포트라이트**: 기존 `Gallery_Track_Spot_01~05`는 액자 사이를 비추고 있었습니다. 이를 지우고 `GUIDE_*` 위치(행사 액자 6개 + 소개문)마다 `Gallery_Art_Spot_<이름>`을 하나씩 두었습니다(1100W, 40°, Blend 0.3). 레일의 조명 기구도 액자 위치로 옮겼습니다(`REF_Fixture_*`).
+
+값은 스크립트 맨 위 상수에서 바꾸고 다시 실행하면 됩니다. 실행할 때마다 원본에서 새로 시작합니다.
+
+```
+blender -b neoize-gallery-clear-daylight.blend --python improve_reference_look.py
+```
+
+Blender 화면에서 직접 실행하려면 `neoize-gallery-clear-daylight.blend`를 열고 Scripting 탭에서 이 파일을 불러와 Run Script를 누르세요.
+
+### 웹에 적용하기
+
+1. 24면 렌더링(NVIDIA GPU, 면당 2048px). `--output`은 매번 새 폴더를 쓰세요(이미 있는 PNG는 건너뜁니다).
+   ```
+   blender -b neoize-gallery-reference-look.blend --python render_panoramas.py -- --output renders-reference --samples 48
+   ```
+2. 저장소 맨 위 폴더에서 WebP로 변환해 `public/panoramas/`를 교체합니다.
+   ```
+   node scripts/import-blender.mjs blender/renders-reference
+   ```
+3. 화면을 확인한 뒤 `public/panoramas/`만 커밋합니다. PNG 렌더 폴더는 올리지 마세요.
