@@ -44,3 +44,29 @@ test('mobile: menu and event list work',async({page})=>{
  await page.getByRole('button',{name:'공간 이동 메뉴 열기'}).click();await expect(page.locator('.tour-menu')).toBeVisible();await page.getByRole('button',{name:'공간 이동 메뉴 닫기'}).click();
  await page.getByRole('button',{name:'행사 목록',exact:true}).click();await page.getByRole('button',{name:'주요 행사 01',exact:true}).click();await expect(page.locator('.art-image-stage')).toBeVisible();await expect(page.getByRole('button',{name:'다음 슬라이드'})).toBeVisible();await page.screenshot({path:'test-results/mobile-dialog.png'});
 });
+
+test('walk mode: keys move the visitor, walls stop them, V returns to the nearest panorama',async({page})=>{
+ const errors=await enter(page);
+ await page.getByRole('button',{name:'걷기 모드 켜기'}).click();
+ await page.waitForFunction(()=>window.gallery.walking(),null,{timeout:60000});await expect(page.locator('.loading')).toHaveCount(0);
+ const pos=()=>page.evaluate(()=>window.gallery.inspect().position);
+ const hold=async(key,ms)=>{await page.keyboard.down(key);await page.waitForTimeout(ms);await page.keyboard.up(key);};
+ // Facing down the hall (-z), W walks forward.
+ await page.evaluate(()=>{window.gallery.place(0,4);window.gallery.look(0,0)});await hold('KeyW',1500);
+ const [x,y,z]=await pos();expect(z).toBeLessThan(3.8);expect(x).toBeCloseTo(0,1);expect(y).toBeCloseTo(1.65);
+ // Running straight at the artwork wall stops in front of it.
+ await page.evaluate(()=>{window.gallery.place(3,6.5);window.gallery.look(-Math.PI/2,0)});await page.keyboard.down('ShiftLeft');await hold('KeyW',2500);await page.keyboard.up('ShiftLeft');
+ expect((await pos())[0]).toBeLessThan(3.7);
+ // The glass entrance doors are closed.
+ await page.evaluate(()=>{window.gallery.place(0,8.2);window.gallery.look(Math.PI,0)});await hold('KeyW',2500);
+ expect((await pos())[2]).toBeLessThan(8.8);
+ await page.screenshot({path:'test-results/walk.png'});
+ // Artworks still open from walk mode.
+ await page.evaluate(()=>{window.gallery.place(.5,2.8);window.gallery.look(-Math.PI/2,0)});await page.waitForTimeout(300);
+ await clickProjected(page,'deib');await expect(page.getByRole('dialog')).toBeVisible();await page.keyboard.press('Escape');await expect(page.getByRole('dialog')).toHaveCount(0);
+ // V goes back to the panorama closest to where the visitor stands.
+ await page.evaluate(()=>window.gallery.place(.3,-2));await page.keyboard.press('v');
+ await page.waitForFunction(()=>!window.gallery.walking());await at(page,1);
+ await expect(page.getByRole('button',{name:'걷기 모드 켜기'})).toHaveAttribute('aria-pressed','false');
+ expect(errors).toEqual([]);
+});

@@ -52,3 +52,8 @@ footer{align-items:flex-end}
  .slide-arrow{width:40px;height:56px}.slide-arrow.prev{left:6px}.slide-arrow.next{right:6px}
  .art-meta strong,.art-meta .art-count{display:none}
 }
+
+/* Walk mode joystick (touch screens only) */
+.joystick{display:none;position:absolute;left:24px;bottom:96px;width:116px;height:116px;border-radius:50%;background:#f9faf566;border:2px solid #ffffffcc;box-shadow:0 2px 12px #17221c1f;backdrop-filter:blur(6px);touch-action:none;z-index:20}
+.joystick i{position:absolute;left:50%;top:50%;width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;background:#294a38;box-shadow:0 3px 10px #17221c40;pointer-events:none}
+@media (pointer:coarse),(max-width:800px){.joystick{display:block}}
