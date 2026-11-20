@@ -32,7 +32,7 @@ WINDOW_SKY_COLOR = (0.82, 0.9, 1.0)   # was (0.75, 0.86, 1.0): slightly less blu
 CEILING_FILL_POWER = 10.0             # was 28: the main reason the room looked flat
 WORLD_STRENGTH = 0.10                 # was 0.14
 EXTERIOR_BRIGHTNESS = 2.4             # was 1.65: outside should read brighter than inside
-EXPOSURE = 0.35                       # unchanged
+EXPOSURE = 1.0                        # was 0.35; raised to bring back bright white walls with less fill light
 
 # 3. Spotlights: one per artwork, with a visible edge on the wall.
 SPOT_POWER = 1100.0                   # was 460 (the beam is narrower now, so it needs more power)
@@ -42,7 +42,8 @@ SPOT_RADIUS = 0.04                    # was 0.10; smaller = crisper edge
 SPOT_HEIGHT = 4.17                    # just below the track rail
 TRACK_X = 2.6                         # the two ceiling rails run along x = +2.6 and x = -2.6
 AIM_ABOVE_CENTER = 0.15               # aim slightly above the artwork centre, like the reference
-BACK_WALL_MOUNT_Y = 7.6               # where the back-wall spots hang on the rails
+BACK_WALL_MOUNT_Y = 7.5               # back-wall spots hang straight in front of each artwork, under the last ceiling beam
+BACK_WALL_SPOT_HEIGHT = 4.42          # the beam's underside is at about 4.52 m
 
 if Path(bpy.data.filepath).resolve() != SOURCE.resolve():
     bpy.ops.wm.open_mainfile(filepath=str(SOURCE))
@@ -120,7 +121,7 @@ for guide in guides:
     if on_side_wall:
         mount = Vector((TRACK_X, target.y, SPOT_HEIGHT))
     else:
-        mount = Vector((TRACK_X if target.x > 0 else -TRACK_X, BACK_WALL_MOUNT_Y, SPOT_HEIGHT))
+        mount = Vector((target.x, BACK_WALL_MOUNT_Y, BACK_WALL_SPOT_HEIGHT))
     name = guide.name.replace("GUIDE_", "")
     data = bpy.data.lights.new(f"Gallery_Art_Spot_{name}", "SPOT")
     data.energy, data.color = SPOT_POWER, light_color
