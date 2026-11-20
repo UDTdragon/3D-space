@@ -1,6 +1,7 @@
 import * as T from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {asset,stations,artworks,site} from './data';
+import {applyBlenderLook} from './walk-look.js';
 
 const LAST = stations.length-1;
 const DEFAULT_FOV = 72;
@@ -18,7 +19,7 @@ export async function createViewer(container,{onArtwork,onStation,onBusy,onError
  const scene=new T.Scene(),camera=new T.PerspectiveCamera(DEFAULT_FOV,1,.05,100);const ray=new T.Raycaster();const pointer=new T.Vector2();
  const frames=new T.Group(),markers=new T.Group();scene.add(frames,markers);
  let disposed=false,current=0,yaw=stations[0].yaw,pitch=stations[0].pitch,viewYaw=yaw,viewPitch=pitch,drag=null,enabled=false,blocked=false,busy=false;
- let walking=false,room=null,roomPending=null,colliders=[],goal=null;
+ let walking=false,room=null,roomPending=null,colliders=[],goal=null,look=null,envStation=-1;
  const held=new Set(),turn=new Set(),stick=new T.Vector2();
  const cache=new Map();const loader=new T.CubeTextureLoader();
  async function load(index){if(cache.has(index))return cache.get(index);const pending=loader.loadAsync(['px','nx','py','ny','pz','nz'].map(f=>asset(`panoramas/${stations[index].id}/${f}.webp?v=reference-look-20261120`))).then(tex=>{tex.colorSpace=T.SRGBColorSpace;if(disposed)tex.dispose();return tex}).catch(e=>{cache.delete(index);throw e});cache.set(index,pending);return pending;}
@@ -67,6 +68,8 @@ export async function createViewer(container,{onArtwork,onStation,onBusy,onError
  async function buildRoom(){
   const {createRoom}=await import('./room.js');
   const r=await createRoom();
+  // Bring the live room closer to the Blender scene the panoramas come from (src/walk-look.js).
+  look=applyBlenderLook(r,[...artworks.map(a=>a.position),introduction.position.toArray()]);
   r.updateMatrixWorld(true);
   const box=new T.Box3(),list=[];
   r.traverse(o=>{if(!o.isMesh)return;box.setFromObject(o);if(box.max.y>.15&&box.min.y<1.8)list.push([box.min.x,box.min.z,box.max.x,box.max.z]);});
@@ -94,7 +97,7 @@ export async function createViewer(container,{onArtwork,onStation,onBusy,onError
   for(const o of remove)o.parent.remove(o);
   for(const {material,list} of groups.values()){
    const merged=mergeGeometries(list);if(!merged)continue;for(const g of list)g.dispose();
-   const mat=material.clone();mat.color.set('#ffffff');mat.vertexColors=true;
+   const mat=material.clone();mat.color.set('#ffffff');mat.vertexColors=true;look?.track(mat);
    const mesh=new T.Mesh(merged,mat);mesh.castShadow=mesh.receiveShadow=true;r.add(mesh);
   }
  }
@@ -120,6 +123,21 @@ export async function createViewer(container,{onArtwork,onStation,onBusy,onError
  function nearestStation(){let best=0,bd=Infinity;stations.forEach((s,i)=>{const d=Math.hypot(s.position[0]-camera.position.x,s.position[2]-camera.position.z);if(d<bd){bd=d;best=i;}});return best;}
  function walkTo(index,face='default'){goal={x:stations[index].position[0],z:stations[index].position[2]};if(face==='default'){yaw=stations[index].yaw;pitch=stations[index].pitch;}}
  function stopMoving(){held.clear();turn.clear();stick.set(0,0);goal=null;}
+ // Floor and glass reflect the panorama rendered at the nearest station, so walk mode shows the Blender room in its reflections.
+ // Reflections are slightly blurred, so a 256px copy of each face is plenty and keeps the
+ // reflection map quick to prepare (the full 2048px panorama took seconds on slow devices).
+ const envCache=new Map();
+ function smallCube(tex){
+  const faces=tex.image.map(img=>{const c=document.createElement('canvas');c.width=c.height=256;c.getContext('2d').drawImage(img,0,0,256,256);return c;});
+  const cube=new T.CubeTexture(faces);cube.colorSpace=T.SRGBColorSpace;cube.needsUpdate=true;return cube;
+ }
+ async function updateEnvironment(index){
+  if(!look||index===envStation)return;envStation=index;
+  try{
+   if(!envCache.has(index))envCache.set(index,smallCube(await load(index)));
+   if(walking&&envStation===index)look.setEnvironment(envCache.get(index));
+  }catch{envCache.delete(index);envStation=-1;}
+ }
 
  async function setWalk(on){
   if(on===walking||busy||disposed)return walking;
@@ -131,9 +149,12 @@ export async function createViewer(container,{onArtwork,onStation,onBusy,onError
    if(disposed)return walking;
    colliders=colliders.concat(frameColliders());
    room.add(frames,markers,introduction);
+   // Artworks, the introduction and floor markers keep their exact colours: tone mapping is for the room only.
+   for(const g of [frames,markers,introduction])g.traverse(o=>{if(o.material)o.material.toneMapped=false;});
    for(const m of markers.children)m.visible=true;
-   renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFShadowMap;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
+   renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFShadowMap;renderer.toneMapping=T.AgXToneMapping;renderer.toneMappingExposure=look.exposure;
    walking=true;camera.position.fromArray(stations[current].position);collide(camera.position);
+   envStation=-1;await updateEnvironment(current);
   }else{
    stopMoving();walking=false;
    scene.add(frames,markers,introduction);
@@ -155,7 +176,7 @@ export async function createViewer(container,{onArtwork,onStation,onBusy,onError
   else if(goal){const dx=goal.x-p.x,dz=goal.z-p.z,d=Math.hypot(dx,dz),k=Math.min(d,RUN_SPEED*dt);if(d<.02)goal=null;else{p.x+=dx/d*k;p.z+=dz/d*k;}}
   else return;
   p.y=EYE;collide(p);
-  const near=nearestStation();if(near!==current){current=near;onStation(current);}
+  const near=nearestStation();if(near!==current){current=near;onStation(current);void updateEnvironment(near);}
  }
 
  function hit(event){const rect=renderer.domElement.getBoundingClientRect();pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);active().updateMatrixWorld(true);camera.updateMatrixWorld(true);ray.setFromCamera(pointer,camera);return ray.intersectObjects([...frames.children,...markers.children],true).find(h=>h.object.visible&&h.object.parent.visible);}
@@ -185,7 +206,7 @@ export async function createViewer(container,{onArtwork,onStation,onBusy,onError
   goto:(index)=>walking?walkTo(index):index===current?(yaw=stations[index].yaw,pitch=stations[index].pitch,aim(true)):move(index,{face:'default'}),
   enter(){enabled=true;},
   block(value){blocked=value;drag=null;if(value)stopMoving();},
-  reset(){camera.fov=DEFAULT_FOV;camera.updateProjectionMatrix();if(walking){goal=null;camera.position.fromArray(stations[0].position);yaw=stations[0].yaw;pitch=stations[0].pitch;aim(true);current=0;onStation(0);}else if(current===0){yaw=stations[0].yaw;pitch=stations[0].pitch;aim(true);}else void move(0,{face:'default'});},
+  reset(){camera.fov=DEFAULT_FOV;camera.updateProjectionMatrix();if(walking){goal=null;camera.position.fromArray(stations[0].position);yaw=stations[0].yaw;pitch=stations[0].pitch;aim(true);current=0;onStation(0);void updateEnvironment(0);}else if(current===0){yaw=stations[0].yaw;pitch=stations[0].pitch;aim(true);}else void move(0,{face:'default'});},
   zoom(delta){camera.fov=T.MathUtils.clamp(camera.fov+delta,45,90);camera.updateProjectionMatrix()},
   // Walk mode controls: setWalk(true/false) switches modes, stick(x, y) is the on-screen joystick (-1..1, y<0 = forward).
   setWalk,
@@ -195,6 +216,6 @@ export async function createViewer(container,{onArtwork,onStation,onBusy,onError
   inspect(){return{station:current,yaw,pitch,fov:camera.fov,walking,position:camera.position.toArray()}},
   look(y,p=pitch){yaw=y;pitch=p;aim(true);},
   project(id,type='artwork'){let p;if(type==='station')p=new T.Vector3(stations[id].marker[0],.021,stations[id].marker[1]);else p=new T.Vector3(...artworks.find(a=>a.id===id).position);camera.updateMatrixWorld();p.project(camera);const r=canvas.getBoundingClientRect();return{x:r.left+(p.x+1)*r.width/2,y:r.top+(1-p.y)*r.height/2,visible:Math.abs(p.x)<1&&Math.abs(p.y)<1&&p.z<1}},
-  dispose(){disposed=true;ro.disconnect();window.removeEventListener('keydown',key);window.removeEventListener('keyup',keyUp);window.removeEventListener('blur',blur);renderer.setAnimationLoop(null);const gone=new Set();for(const s of [scene,room])s?.traverse(o=>{if(gone.has(o))return;gone.add(o);o.geometry?.dispose();if(o.material){o.material.map?.dispose();o.material.bumpMap?.dispose();o.material.dispose()}});cache.forEach(p=>p.then(t=>t.dispose()));renderer.dispose();canvas.remove();}
+  dispose(){disposed=true;ro.disconnect();window.removeEventListener('keydown',key);window.removeEventListener('keyup',keyUp);window.removeEventListener('blur',blur);renderer.setAnimationLoop(null);const gone=new Set();for(const s of [scene,room])s?.traverse(o=>{if(gone.has(o))return;gone.add(o);o.geometry?.dispose();if(o.material){o.material.map?.dispose();o.material.bumpMap?.dispose();o.material.dispose()}});cache.forEach(p=>p.then(t=>t.dispose()));envCache.forEach(t=>t.dispose());renderer.dispose();canvas.remove();}
  };
 }
