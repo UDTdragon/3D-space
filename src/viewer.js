@@ -21,7 +21,7 @@ export async function createViewer(container,{onArtwork,onStation,onBusy,onError
  let walking=false,room=null,roomPending=null,colliders=[],goal=null;
  const held=new Set(),turn=new Set(),stick=new T.Vector2();
  const cache=new Map();const loader=new T.CubeTextureLoader();
- async function load(index){if(cache.has(index))return cache.get(index);const pending=loader.loadAsync(['px','nx','py','ny','pz','nz'].map(f=>asset(`panoramas/${stations[index].id}/${f}.webp?v=clear-daylight-20260909`))).then(tex=>{tex.colorSpace=T.SRGBColorSpace;if(disposed)tex.dispose();return tex}).catch(e=>{cache.delete(index);throw e});cache.set(index,pending);return pending;}
+ async function load(index){if(cache.has(index))return cache.get(index);const pending=loader.loadAsync(['px','nx','py','ny','pz','nz'].map(f=>asset(`panoramas/${stations[index].id}/${f}.webp?v=reference-look-20261120`))).then(tex=>{tex.colorSpace=T.SRGBColorSpace;if(disposed)tex.dispose();return tex}).catch(e=>{cache.delete(index);throw e});cache.set(index,pending);return pending;}
  function trimCache(){for(const [index,promise]of cache){if(index!==current&&index!==Math.min(current+1,LAST)){promise.then(t=>t.dispose());cache.delete(index);}}}
  const textureLoader=new T.TextureLoader();
  const introTex=await textureLoader.loadAsync(asset('assets/wall-introduction.svg'));introTex.colorSpace=T.SRGBColorSpace;
