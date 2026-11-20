@@ -62,12 +62,31 @@ Blender 화면에서 직접 실행하려면 `neoize-gallery-clear-daylight.blend
 
 ### 웹에 적용하기
 
-1. 24면 렌더링(NVIDIA GPU, 면당 2048px). `--output`은 매번 새 폴더를 쓰세요(이미 있는 PNG는 건너뜁니다).
+1. 사이트에서 쓰는 3지점(entrance, connection, horizon) × 6면 = 18장 렌더링(NVIDIA GPU, 면당 2048px). `--output`은 매번 새 폴더를 쓰세요(이미 있는 PNG는 건너뜁니다).
    ```
-   blender -b neoize-gallery-reference-look.blend --python render_panoramas.py -- --output renders-reference --samples 48
+   blender -b neoize-gallery-reference-look.blend --python render_panoramas.py -- --output renders-reference
    ```
 2. 저장소 맨 위 폴더에서 WebP로 변환해 `public/panoramas/`를 교체합니다.
    ```
    node scripts/import-blender.mjs blender/renders-reference
    ```
 3. 화면을 확인한 뒤 `public/panoramas/`만 커밋합니다. PNG 렌더 폴더는 올리지 마세요.
+
+### 렌더링 시간 줄이기
+
+`render_panoramas.py`는 기본으로 빠른 설정을 씁니다.
+
+- 사이트에서 쓰는 3지점만 렌더링합니다(18장). 동선에서 뺀 `discovery`가 필요하면 `--station discovery`를 붙이세요.
+- 32샘플, 노이즈 임계값 0.03, Persistent Data(장면을 한 번만 준비해 모든 면에 재사용)를 씁니다.
+- 같은 장면에서 비교한 결과, 이전 설정(64샘플, 임계값 0.01)보다 면당 약 2.3배 빠르고 픽셀 차이는 평균 2/255 미만이었습니다. 지점 수 감소까지 합치면 전체 시간은 이전의 약 1/3입니다.
+- 커스틱과 빛 반사 횟수는 그대로 둡니다. 끄면 반사 바닥에서 벽으로 가는 햇빛이 빠져 벽이 어두워졌습니다.
+- 파일에 저장된 샘플 설정을 그대로 쓰려면 `--quality full --samples 64`를 붙이세요.
+- 값을 시험할 때는 `--station entrance --face nx --size 1024`처럼 일부만 작게 렌더링하세요.
+
+Blender 화면(Scripting 탭)에서 실행할 때는 텍스트 편집기에 아래를 넣고 실행(Alt+P)합니다. 결과는 열려 있는 .blend와 같은 폴더의 `renders-reference`에 저장됩니다.
+
+```python
+import bpy, sys
+sys.argv = ["blender", "--", "--output", bpy.path.abspath("//renders-reference")]
+exec(open(bpy.path.abspath("//render_panoramas.py"), encoding="utf-8").read())
+```

@@ -28,7 +28,7 @@ GitHub 저장소 Settings → Pages → Source에서 **GitHub Actions**를 선�
 
 1. Blender에서 창틀·벽 재질·조명을 수정합니다. 관람 카메라의 위치·회전·90도 시야각은 유지합니다.
 2. `entrance`, `discovery`, `connection`, `horizon` 지점별로 `px`, `nx`, `py`, `ny`, `pz`, `nz` 카메라를 정사각형 PNG로 출력합니다. 모든 면에 동일한 노출과 색상 관리를 사용합니다.
-3. `node scripts/import-blender.mjs "렌더 폴더"`를 실행합니다. 24개 PNG의 존재와 크기를 검사한 뒤 `public/panoramas/`를 압축 WebP로 교체합니다.
+3. `node scripts/import-blender.mjs "렌더 폴더"`를 실행합니다. 사이트에서 쓰는 3지점(18개 PNG, `discovery` 폴더가 있으면 함께)의 존재와 크기를 검사한 뒤 `public/panoramas/`를 압축 WebP로 교체합니다.
 4. `src/viewer.js`의 파노라마 URL 버전을 갱신하고 빌드·미리보기에서 방향과 액자 정렬을 확인한 뒤 커밋합니다.
 
 GitHub Actions는 커밋된 파노라마를 그대로 배포합니다. 기존 `npm run bake`는 Three.js 공간 제작용 도구로, 실행하면 Blender 배경을 기존 공간 이미지로 덮어씁니다. 아래의 Three.js 제작 설명은 이전 제작 방식의 참고입니다.
